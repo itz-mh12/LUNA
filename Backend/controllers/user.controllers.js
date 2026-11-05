@@ -89,7 +89,7 @@ export const login = async (req, res) => {
             .json({
                 message: `Welcome back ${user.username}`,
                 success: true,
-                user
+                user,
             });
     } catch (error) {
         console.log(error);
@@ -101,9 +101,36 @@ export const logout = async (_, res) => {
         return res.cookie("token", "", { maxAge: 0 }).json({
             message: "Logged out successfully",
             success: true,
-            
         });
     } catch (error) {
+        console.log(error);
+    }
+};
+
+export const getProfile = async (req, res) => {
+    try {
+        const userId = req.params._id;
+        let user = await User.findById(userId);
+        return res.status(200).json({
+            user,
+            success: true,
+        });
+    } catch (error) {
+        console.log(error);
+    }
+};
+export const editProfile = async (req, res) => {
+    try {
+        const userId = req.id;
+        const { bio, gender } = req.body;
+        const profilePicture = req.file;
+        let cloudResponse;
+
+        if (profilePicture) {
+            const fileUri = getDataUri(profilePicture);
+            cloudResponse = await cloudinary.uploader.upload(fileUri);
+        }
+    } catch {
         console.log(error);
     }
 };
