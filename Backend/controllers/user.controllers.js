@@ -1,6 +1,9 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import getDataUri from "../utils/datauri.js";
+
+//Register
 
 export const register = async (req, res) => {
     try {
@@ -36,6 +39,9 @@ export const register = async (req, res) => {
         console.log(error);
     }
 };
+
+//Login
+
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -96,6 +102,8 @@ export const login = async (req, res) => {
     }
 };
 
+//Logout
+
 export const logout = async (_, res) => {
     try {
         return res.cookie("token", "", { maxAge: 0 }).json({
@@ -107,9 +115,11 @@ export const logout = async (_, res) => {
     }
 };
 
+//GetProfile
+
 export const getProfile = async (req, res) => {
     try {
-        const userId = req.params._id;
+        const userId = req.params.id;
         let user = await User.findById(userId);
         return res.status(200).json({
             user,
@@ -119,6 +129,9 @@ export const getProfile = async (req, res) => {
         console.log(error);
     }
 };
+
+//EditProfile
+
 export const editProfile = async (req, res) => {
     try {
         const userId = req.id;
@@ -149,8 +162,8 @@ export const editProfile = async (req, res) => {
             success: true,
             user,
         });
-    } catch {
-        console.log(error);
+    } catch(error) {
+        console.error(error.stack);
     }
 };
 
