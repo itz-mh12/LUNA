@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import cloudinary from "../utils/cloudinary";
+import cloudinary from "../utils/cloudinary.js";
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { populate } from "dotenv";
@@ -206,10 +206,65 @@ export const getCommentOfPost = async (req, res) => {
     }
 };
 
-export const deletePost = (req,res)=>{
+export const deletePost = async (req, res) => {
     try {
         const postId = req.params.id;
+        const authorId = req.id;
+        const post = await Post.findById(postId);
+        if (!post)
+            return res.status(404).json({
+                message: "Post not found",
+                success: false,
+            });
+        if (post.author.toString() != authorId)
+            return res.status(403).json({ message: "Unauthorized" });
+        await Post.findByIdAndDelete(postId);
+
+        let user = await User.findById(authorId);
+        user.posts = user.posts.filter((id) => id.toString() != postId);
+        await user.save();
+
+        await Comment.deleteMany({ post: postId });
+
+        return res.status(200).json({
+            success: true,
+            message: "Post Deleted",
+        });
     } catch (error) {
         console.log(error);
     }
-}
+};
+
+export const bookMarkPost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const authorId = req.id;
+        const post = await Post.findById(postId);
+        if (!post)
+            return res.status(404).json({
+                message: "Post not found",
+                success: false,
+            });
+
+        const user = await User.findById(authorId);
+        if (user.bookmarks.includes(post.id)) {
+            await user.updateOne({ $pull: { bookmarks: post.id } });
+            await user.save();
+            return res.status(200).json({
+                type: "unsaved",
+                message: "Post removed from bookmark",
+                success: true,
+            });
+        } else {
+            await user.updateOne({ $push: { bookmarks: post.id } });
+            await user.save();
+            return res.status(200).json({
+                type: "saved",
+                message: "Post bookmarked",
+                success: true,
+            });
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
